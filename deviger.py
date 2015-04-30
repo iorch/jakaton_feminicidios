@@ -34,6 +34,16 @@ def load_dataset(dataset):
 			tweets.append(tweet[1])
 	return tweets
 
+def load_dictionary():
+	filename = "data/dict.txt"
+
+	dictionary = []
+	with open(filename) as fin:
+		reader = csv.reader(fin)
+		for word in reader:
+			dictionary.append(word[0])
+	return dictionary
+
 # Gets a dictionary with the frequency count of each word in the corpus.
 def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
 	"""
@@ -83,6 +93,7 @@ def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
 
 def main():
 	print("DeViGeR")
+	dictionary = load_dictionary()
 	tweets = load_dataset("train.txt")
 
 	stops = open('data/stopwords_spanish.txt').read().splitlines()
@@ -90,19 +101,16 @@ def main():
 	emojis = pd.read_csv('data/emojis.csv')
 	emoj = list(emojis['emoji'])
 
+	
+
 	bow = {}
-	i = 1
 	for tweet in tweets:
-		print("tweet",i)
 		vector = tf_vector(tweet, stopwords=stops, emoticons=emos, emojis=emoj)
-		print(vector)
 		for word in vector:
 			if word in bow:
 				bow[word] += vector[word]
 			else:
 				bow[word] = vector[word]
-		i += 1
-	print(bow)
 
 if __name__ == '__main__':
 	main()
