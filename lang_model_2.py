@@ -1,13 +1,7 @@
-import math
-import os.path
-
-import pickle
-
-import glob
-import nltk
-from nltk.corpus.reader import XMLCorpusReader
-
 import deviger
+import math
+import nltk
+import pickle
 
 
 class LangModel:
@@ -80,7 +74,7 @@ def test():
         for sent in sentences:
             words = nltk.word_tokenize(sent)
             word_trigrams = nltk.trigrams(words)
-                sum_log_prob = 0
+            sum_log_prob = 0
             for trigram in word_trigrams:
                 logprob = lm1.log_prob(trigram)
                 sum_log_prob += logprob

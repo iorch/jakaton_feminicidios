@@ -1,2 +1,3 @@
 PyStemmer
 pandas
+requests
