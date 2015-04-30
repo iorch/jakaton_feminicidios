@@ -6,6 +6,7 @@
 import csv
 import io
 import json
+import numpy as np
 import os
 import pandas as pd
 import re
@@ -37,7 +38,6 @@ def load_dataset(dataset):
 
 def load_dictionary():
 	filename = "data/dict.txt"
-
 	dictionary = []
 	with open(filename) as fin:
 		reader = csv.reader(fin)
@@ -92,6 +92,29 @@ def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
  
 	return dict(Counter(words_nonstop_lower_stemmed))
 
+# Vector space model
+def get_similarity(tw_vector, dict_vector):
+
+	keys_tweet = set(tw_vector.keys())
+	keys_dict = set(dict_vector.keys())
+	intersection = keys_tweet & keys_dict
+
+	num = 0
+	for element in intersection:
+		num += tw_vector[element] * dict_vector[element]
+
+	denA = 0
+	for element in tw_vector:
+		denA += tw_vector[element]**2
+
+	denB = 0
+	for element in dict_vector:
+		denB += dict_vector[element]**2
+
+	similarity = num/(denA*denB)
+
+	return similarity
+
 
 def main():
 	print("DeViGeR")
@@ -104,13 +127,10 @@ def main():
 	emoj = list(emojis['emoji'])
 
 	bow = {}
+	dict_vector = tf_vector((" ").join(dictionary), stopwords=stops, emoticons=emos, emojis=emoj)
 	for tweet in tweets:
-		vector = tf_vector(tweet, stopwords=stops, emoticons=emos, emojis=emoj)
-		for word in vector:
-			if word in bow:
-				bow[word] += vector[word]
-			else:
-				bow[word] = vector[word]
+		tw_vector = tf_vector(tweet, stopwords=stops, emoticons=emos, emojis=emoj)
+		similarity = get_similarity(tw_vector, dict_vector)
 
 
 if __name__ == '__main__':
