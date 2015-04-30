@@ -32,9 +32,14 @@ EMOJIS = "emojis.csv"
 
 def load_dataset(dataset):
 	path = os.path.dirname(os.path.abspath(__file__))
+<<<<<<< HEAD
 	filename = os.path.join(path,DATAPATH,dataset)
 	
+=======
+	filename = os.path.join(path,"data",dataset)
+>>>>>>> 15b6d080a6de26f07556416e23a455a94c320646
 	tweets = []
+
 	with open(filename) as fin:
 		reader = csv.reader(fin)
 		for row in reader:
@@ -42,6 +47,7 @@ def load_dataset(dataset):
 			tweets.append(tweet[1])
 	return tweets
 
+<<<<<<< HEAD
 def load_dictionary(dictionary):
 	"""
 	Loads the dictionary of violent words.
@@ -52,13 +58,25 @@ def load_dictionary(dictionary):
 	filename = os.path.join(path,DATAPATH,dictionary)
 	
 	dictlist = []
+=======
+
+def load_dictionary():
+	filename = "data/dict.txt"
+	dictionary = []
+>>>>>>> 15b6d080a6de26f07556416e23a455a94c320646
 	with open(filename) as fin:
 		reader = csv.reader(fin)
 		for word in reader:
 			dictionary.append(word[0])
 	return dictlist
 
+<<<<<<< HEAD
 def tf_vector(tweet):
+=======
+
+# Gets a dictionary with the frequency count of each word in the corpus.
+def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
+>>>>>>> 15b6d080a6de26f07556416e23a455a94c320646
 	"""
 	Transform a string into a Term-Frecuency dictionary
 	:param tweet: Text to process
