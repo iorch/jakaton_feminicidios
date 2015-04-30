@@ -6,6 +6,7 @@
 import csv
 import io
 import json
+import logging
 import numpy as np
 import os
 import pandas as pd
@@ -13,20 +14,25 @@ import re
 import Stemmer
 import sys
 import time
-from collections import Counter
-
+from collections import Counter, OrderedDict
 
 __author__ = "Miguel Salazar, Jorge Martínez, Fernando Aguilar"
 __license__ = "GPL"
 __version__ = "1.0"
 __status__ = "Prototype"
 
+THRESHOLD = 0
+DATAPATH = "data"
+VIOLENT = "dict.txt"
+TRAINING_SET = "train.txt"
+STOPWORDS = "stopwords_spanish.txt"
+EMOTICONS = "emoticons.txt"
+EMOJIS = "emojis.csv"
+
 
 def load_dataset(dataset):
-	print("loading dataset...")
-
 	path = os.path.dirname(os.path.abspath(__file__))
-	filename = os.path.join(path,"data",dataset)
+	filename = os.path.join(path,DATAPATH,dataset)
 	
 	tweets = []
 	with open(filename) as fin:
@@ -36,37 +42,40 @@ def load_dataset(dataset):
 			tweets.append(tweet[1])
 	return tweets
 
-def load_dictionary():
-	filename = "data/dict.txt"
-	dictionary = []
+def load_dictionary(dictionary):
+	"""
+	Loads the dictionary of violent words.
+	:param dictionary: Dictionary filename. Must be placed in the /data directory.
+	:return: The list of violent words that were loaded from the dictionary.
+	"""
+	path = os.path.dirname(os.path.abspath(__file__))
+	filename = os.path.join(path,DATAPATH,dictionary)
+	
+	dictlist = []
 	with open(filename) as fin:
 		reader = csv.reader(fin)
 		for word in reader:
 			dictionary.append(word[0])
-	return dictionary
+	return dictlist
 
-# Gets a dictionary with the frequency count of each word in the corpus.
-def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
+def tf_vector(tweet):
 	"""
 	Transform a string into a Term-Frecuency dictionary
-	:param txt: Text to process
+	:param tweet: Text to process
 	:param stopwords: A list of string of stopwords
 	:param emoticons: A list of string of emoticons (see __main__ in this script)
 	:param emojis: A list of string of emoticons (see __main__ in this script)
 	:return: a dict object in the form {term=count}, with all terms preprocessed
 	"""
-	if stopwords is None:
-		raise ValueError('You must provide a stopwords list')
-	if emoticons is None:
-		raise ValueError('You must provide an emoticons list')
-	if emojis is None:
-		raise ValueError('You must provide an emojis list')
-	if not isinstance(txt, str):
-		raise ValueError('txt must be a string')
+	path = os.path.dirname(os.path.abspath(__file__))
+	stopwords = open(os.path.join(path,DATAPATH,STOPWORDS)).read().splitlines()
+	emoticons = open(os.path.join(path,DATAPATH,EMOTICONS)).read().splitlines()
+	emoj = pd.read_csv(os.path.join(path,DATAPATH,EMMOJIS))
+	emojis = list(emoj['emoji'])
  
 	token_list = ['URL', 'EMAIL', 'MENTION', 'HASHTAG', 'NUMBER', 'EMOTICON', 'EMOJI']
 
-	x = txt
+	x = tweet
 	x = re.sub("(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", " URL ", x)
 	x = re.sub("^[_A-Za-z0-9-\\\\+]+(\\\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\\\.[A-Za-z0-9]+)*(\\\\.[A-Za-z]{2,})$", " EMAIL ", x)
 	x = re.sub("@[A-Za-z0-9]+", " MENTION ", x)
@@ -83,10 +92,8 @@ def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
  
 	words = x.split(' ')
 	words_nonstop = [w for w in words if not w in stopwords]
-	#words_nonstop_lower = words_nonstop
 	words_nonstop_lower = [w.lower() if not w in token_list else w for w in words_nonstop]
  
-	# TODO: How to detect language!?
 	stemmer = Stemmer.Stemmer('spanish')
 	words_nonstop_lower_stemmed = stemmer.stemWords(words_nonstop_lower)
  
@@ -103,34 +110,40 @@ def get_similarity(tw_vector, dict_vector):
 	for element in intersection:
 		num += tw_vector[element] * dict_vector[element]
 
-	denA = 0
-	for element in tw_vector:
-		denA += tw_vector[element]**2
-
-	denB = 0
-	for element in dict_vector:
-		denB += dict_vector[element]**2
-
-	similarity = num/(denA*denB)
+	if ( len(tw_vector) or len(dict_vector) ) == 0:
+		return similarity = 0
+	else:
+		denA = 0
+		for element in tw_vector:
+			denA += tw_vector[element]**2
+		denB = 0
+		for element in dict_vector:
+			denB += dict_vector[element]**2
+		similarity = num/(denA*denB)
 
 	return similarity
 
 
 def main():
 	print("DeViGeR")
-	dictionary = load_dictionary()
-	tweets = load_dataset("train.txt")
+	logging.basicConfig(level=logging.INFO)
+	logging.info("Starting DeViGeR...")
 
-	stops = open('data/stopwords_spanish.txt').read().splitlines()
-	emos = open('data/emoticons.txt').read().splitlines()
-	emojis = pd.read_csv('data/emojis.csv')
-	emoj = list(emojis['emoji'])
+	dictionary = load_dictionary(VIOLENT)
+	tweets = load_dataset(TRAINING_SET)
 
-	bow = {}
-	dict_vector = tf_vector((" ").join(dictionary), stopwords=stops, emoticons=emos, emojis=emoj)
+	dict_vector = tf_vector(dictionary)
+	d = []
 	for tweet in tweets:
-		tw_vector = tf_vector(tweet, stopwords=stops, emoticons=emos, emojis=emoj)
+		tw_vector = tf_vector(tweet)
 		similarity = get_similarity(tw_vector, dict_vector)
+		if similarity >= THRESHOLD:
+			gender_score = gender_victim(tweet)
+			if gender_score > 0:
+				d.append(tweet)
+			
+	#od = OrderedDict(sorted(d.items(), key=lambda t: t[1]), reverse=True)
+	print(d)
 
 
 if __name__ == '__main__':
