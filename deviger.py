@@ -20,6 +20,7 @@ __license__ = "GPL"
 __version__ = "1.0"
 __status__ = "Prototype"
 
+
 def load_dataset(dataset):
 	print("loading dataset...")
 
@@ -33,6 +34,7 @@ def load_dataset(dataset):
 			tweet = row[0].split("_sep_")
 			tweets.append(tweet[1])
 	return tweets
+
 
 # Gets a dictionary with the frequency count of each word in the corpus.
 def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
@@ -54,7 +56,7 @@ def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
 		raise ValueError('txt must be a string')
  
 	token_list = ['URL', 'EMAIL', 'MENTION', 'HASHTAG', 'NUMBER', 'EMOTICON', 'EMOJI']
- 
+
 	x = txt
 	x = re.sub("(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", " URL ", x)
 	x = re.sub("^[_A-Za-z0-9-\\\\+]+(\\\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\\\.[A-Za-z0-9]+)*(\\\\.[A-Za-z]{2,})$", " EMAIL ", x)
@@ -65,6 +67,7 @@ def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
 		x = x.replace(em, ' EMOTICON ')
 	for ej in emojis:
 		x = x.replace(ej, ' EMOJI ')
+	x = re.sub(u'['u'\U0001F300-\U0001F64F'u'\U0001F680-\U0001F6FF'u'\u2600-\u26FF\u2700-\u27BF]+', ' EMOJI ', x)
 	x = re.sub("[\\\"\\$%&@\\.,:;\\(\\)¿\\?`+\\-_\\*=!¡\\\\/#{}\\[\\]]", " ", x)
 	x = re.sub("\\s+", " ", x)
 	x = x.strip()
@@ -104,6 +107,6 @@ def main():
 		i += 1
 	print(bow)
 
+
 if __name__ == '__main__':
 	main()
-  
