@@ -26,8 +26,8 @@ def load_dataset(dataset):
 
 	path = os.path.dirname(os.path.abspath(__file__))
 	filename = os.path.join(path,"data",dataset)
-	
 	tweets = []
+
 	with open(filename) as fin:
 		reader = csv.reader(fin)
 		for row in reader:
@@ -35,8 +35,9 @@ def load_dataset(dataset):
 			tweets.append(tweet[1])
 	return tweets
 
+
 def load_dictionary():
-	filename = "data/dict.txt"
+	filename = "data/extend_dict.txt"
 
 	dictionary = []
 	with open(filename) as fin:
@@ -44,6 +45,7 @@ def load_dictionary():
 		for word in reader:
 			dictionary.append(word[0])
 	return dictionary
+
 
 # Gets a dictionary with the frequency count of each word in the corpus.
 def tf_vector(txt, stopwords=None, emoticons=None, emojis=None):
@@ -100,8 +102,7 @@ def main():
 
 	stops = open('data/stopwords_spanish.txt').read().splitlines()
 	emos = open('data/emoticons.txt').read().splitlines()
-	emojis = pd.read_csv('data/emojis.csv')
-	emoj = list(emojis['emoji'])
+	emoj = list(pd.read_csv('data/emojis.csv')['emoji'])
 
 	bow = {}
 	for tweet in tweets:

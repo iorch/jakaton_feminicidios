@@ -79,3 +79,6 @@ target/
 # Jetbrains Pycharm
 .idea/
 *.iml
+
+*.bin
+
